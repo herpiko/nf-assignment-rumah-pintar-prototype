@@ -1,0 +1,17 @@
+<resources>
+    <string name="app_name">RumahPintar</string>
+
+    <string name="title_section1">Kendali</string>
+    <string name="title_section2">Pantau</string>
+    <string name="title_section3">Tentang</string>
+
+    <string name="navigation_drawer_open">Open navigation drawer</string>
+    <string name="navigation_drawer_close">Close navigation drawer</string>
+
+    <string name="action_example"></string>
+
+    <string name="action_settings">Tentang</string>
+    <string name="title_activity_about">Tentang</string>
+
+    <string name="hello_world">Hello world!</string>
+</resources>
