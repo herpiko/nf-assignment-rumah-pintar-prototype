@@ -54,8 +54,11 @@ public class MainActivity extends AppCompatActivity
     private Socket mSocket;
     {
         try {
+            // Initiate socket that would be connected to 128.199.95.141 port 2999
             mSocket = IO.socket("http://128.199.95.141:2999");
-        } catch (URISyntaxException e) {}
+        } catch (URISyntaxException e) {
+            // or die young like Gie
+        }
     }
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -71,21 +74,43 @@ public class MainActivity extends AppCompatActivity
                 R.id.navigation_drawer,
                 (DrawerLayout) findViewById(R.id.drawer_layout));
 
+        // Handle socket.io event
+        // "whoareu" is triggered when the server is asking the client
+        // is it a mobile app or a Raspberry device
+        // This event is handled by onWhoareu() function
         mSocket.on("whoareu", onWhoareu);
+
+        // "message" is triggered when the server is sending an emit
+        // The arguments could contains information like sensor's data from Raspberry Pi device
+        // This event is handled by onMessage() function
         mSocket.on("message", onMessage);
 
+        // One line to rule them all, one line to find them,
+        // one line to bring them all and in the darkness bind them
         mSocket.connect();
     }
+
+    // This function is triggered when bulb lamp button touched. Touch it!
     public void hidup (View v) {
+
+        // Send emit "ledOn" to VPS server.
+        // "ledOn" is a command to switch on the LED in Raspberry Pi device
         mSocket.emit("ledOn");
+
+        // Initiate a toast message
         Toast msg = Toast.makeText(this, "Hidupkan lampu", Toast.LENGTH_SHORT);
         msg.setGravity(Gravity.CENTER | Gravity.CENTER_HORIZONTAL, 0, 0);
         msg.show();
         Log.d("SOCKET SWITCH LED", "ON");
     }
 
+    // This function is triggered when "Matikan" button touched
     public void mati (View v) {
+        // Send emit "ledOff" to VPS server.
+        // "ledOff" is a command to switch of the LED in Raspberry Pi device
         mSocket.emit("ledOff");
+
+        // Initiate a toast message
         Toast msg = Toast.makeText(this, "Matikan lampu", Toast.LENGTH_SHORT);
         msg.setGravity(Gravity.CENTER | Gravity.CENTER_HORIZONTAL, 0, 0);
         msg.show();
@@ -102,8 +127,9 @@ public class MainActivity extends AppCompatActivity
                 .commit();
     }
 
+    // Handle drawer menu touchs
     public void onSectionAttached(int number) {
-        //Globals g = (Globals)getApplication();
+
         View nyalakan = findViewById(R.id.kendali);
         View matikan = findViewById(R.id.off);
         View temp = findViewById(R.id.temp);
@@ -111,9 +137,7 @@ public class MainActivity extends AppCompatActivity
         switch (number) {
             case 1:
                 mTitle = getString(R.string.title_section1);
-
-                //g.setTitle("Kendali");
-
+                // When "Kendali" selected, hide some component and show other
                 nyalakan.setVisibility(View.VISIBLE);
                 matikan.setVisibility(View.VISIBLE);
                 humid.setVisibility(View.INVISIBLE);
@@ -121,8 +145,8 @@ public class MainActivity extends AppCompatActivity
                 break;
             case 2:
                 mTitle = getString(R.string.title_section2);
-                //g.setTitle("Pantau");
 
+                // Hide some component and show other
                 nyalakan.setVisibility(View.INVISIBLE);
                 matikan.setVisibility(View.INVISIBLE);
                 humid.setVisibility(View.VISIBLE);
@@ -130,6 +154,8 @@ public class MainActivity extends AppCompatActivity
                 break;
             case 3:
                 mTitle = getString(R.string.title_section3);
+
+                // Move to about activity
                 Intent i=new Intent(getApplicationContext(),about.class);
                 startActivity(i);
                 break;
@@ -210,28 +236,42 @@ public class MainActivity extends AppCompatActivity
                     getArguments().getInt(ARG_SECTION_NUMBER));
         }
     }
+
+    // Connected function to show toast message
     public void connected(){
         Toast msg = Toast.makeText(this, "Koneksi socket berhasil tersambung", Toast.LENGTH_SHORT);
         msg.setGravity(Gravity.CENTER | Gravity.CENTER_HORIZONTAL, 0, 0);
         msg.show();
 
     }
+
+    // onWhoareu function that handle "onwhoareu" socket event.
+    // If it triggered, then the socket has been connected successfully. Yo~!
     private Emitter.Listener onWhoareu = new Emitter.Listener() {
         @Override
         public void call(final Object... args) {
 
             runOnUiThread (new Thread(new Runnable() {
                 public void run() {
+                    Log.d("SOCKET JOIN", "Awwwwwww man! it's connected!");
 
-                    Log.d("SOCKET JOIN", "awwwwwww man! it's connected!");
+                    // Socket has been connected. Call connected() function
                     connected();
                     // Join as mobile client
+
+                    // The server ask for identity, answer her/him with "join-ng"
+                    // "join-ng" is identity string that represent web or mobile app client
+                    // The other one is "join-end" that represent a raspberry pi device
                     // See https://github.com/herpiko/nf-iot-end/blob/master/README.md
                     mSocket.emit("join-ng");
                 }
             }));
         }
     };
+
+    // onMessage function that handle "onmessage" socket event.
+    // Since the raspberry pi only send a dht11 sensor, then make this function
+    // parse these type of data
    private Emitter.Listener onMessage = new Emitter.Listener() {
 
         @Override
@@ -239,10 +279,14 @@ public class MainActivity extends AppCompatActivity
             Log.d("SOCKET MESSAGE", "new message");
             runOnUiThread (new Thread(new Runnable() {
                 public void run() {
+
+                    // Grab the arguments! Convert it to JSON!
                     JSONObject obj = (JSONObject) args[0];
 
                     String temp;
                     String humid;
+
+                    // Parse them all! Parse them!
                     try {
                         JSONObject data = (JSONObject) obj.get("data");
                         temp = data.getString("temp");
@@ -254,6 +298,7 @@ public class MainActivity extends AppCompatActivity
                         TextView humidText = (TextView)findViewById(R.id.humid);
                         humidText.setText(humid + " HpA");
                     } catch (JSONException e) {
+                        // Awwwww!
                         Log.e("ERROR", e.toString());
                         return;
                     }
@@ -262,8 +307,4 @@ public class MainActivity extends AppCompatActivity
             }));
         }
     };
-
-
-
-
 }
